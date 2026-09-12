@@ -414,11 +414,9 @@ import com.exteragram.messenger.ai.network.Client;
 import com.exteragram.messenger.ai.ui.GenerateFromMessageBottomSheet;
 import com.exteragram.messenger.ai.ui.ResponseAlert;
 import tw.nekomimi.nekogram.menu.copy.CopyPopupWrapper;
+import tw.nekomimi.nekogram.menu.ayugram.AyuGramMenuPopupWrapper;
 import tw.nekomimi.nekogram.menu.forward.ForwardPopupWrapper;
-import tw.nekomimi.nekogram.menu.ghostmode.GhostModeExclusionPopupWrapper;
-import tw.nekomimi.nekogram.menu.regexfilters.RegexFiltersExclusionPopupWrapper;
 import tw.nekomimi.nekogram.menu.reply.ReplyPopupWrapper;
-import tw.nekomimi.nekogram.menu.saveDeleted.SaveExclusionPopupWrapper;
 import tw.nekomimi.nekogram.menu.translate.TranslatePopupWrapper;
 import tw.nekomimi.nekogram.parts.DialogTransKt;
 import tw.nekomimi.nekogram.parts.MessageTransKt;
@@ -9787,6 +9785,7 @@ public class ChatActivity extends BaseFragment implements
 
     private ActionBarMenuSubItem showFilteredMenuItem;
     private boolean showFilteredMenuItemRevealed = false;
+    private AyuGramMenuPopupWrapper ayuGramMenuPopupWrapper;
 
     private void revealShowFilteredMenuItem() {
         if (showFilteredMenuItemRevealed) {
@@ -9818,123 +9817,23 @@ public class ChatActivity extends BaseFragment implements
             return;
         }
 
-        ActionBarPopupWindow.ActionBarPopupWindowLayout ayuLayout = new ActionBarPopupWindow.ActionBarPopupWindowLayout(
-                actionBar.getContext(),
-                0,
-                getResourceProvider(),
-                ActionBarPopupWindow.ActionBarPopupWindowLayout.FLAG_USE_SWIPEBACK
-        );
-        ayuLayout.setFitItems(true);
-
-        ActionBarPopupWindow.ActionBarPopupWindowLayout parentPopupLayout = headerItem.getPopupLayout();
-        PopupSwipeBackLayout parentSwipeBack = parentPopupLayout != null ? parentPopupLayout.getSwipeBack() : null;
-        PopupSwipeBackLayout ayuSwipeBack = ayuLayout.getSwipeBack();
-        if (ayuSwipeBack != null) {
-            final int[] lastAppliedAyuHeight = {-1};
-            ayuSwipeBack.setOnHeightUpdateListener(height -> {
-                if (height <= 0 || lastAppliedAyuHeight[0] == height) {
-                    return;
-                }
-                if (parentSwipeBack == null) {
-                    return;
-                }
-                int ayuSwipeBackIndex = parentSwipeBack.indexOfChild(ayuLayout);
-                if (ayuSwipeBackIndex < 0) {
-                    return;
-                }
-                lastAppliedAyuHeight[0] = height;
-                parentSwipeBack.setNewForegroundHeight(ayuSwipeBackIndex, height, false);
-            });
-        }
-        if (parentSwipeBack != null) {
-            ActionBarMenuSubItem backItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.msg_arrow_back, getString(R.string.Back), false, getResourceProvider());
-            backItem.setOnClickListener(v -> parentSwipeBack.closeForeground());
-            ActionBarMenuItem.addColoredGap(ayuLayout, getResourceProvider());
-        }
-
         Runnable dismissMenu = () -> {
             if (headerItem != null && headerItem.isSubMenuShowing()) {
                 headerItem.toggleSubMenu();
             }
         };
 
-        if (showGhostMode) {
-            GhostModeExclusionPopupWrapper ghostModePopupWrapper = new GhostModeExclusionPopupWrapper(
-                    this,
-                    ayuSwipeBack,
-                    dialog_id,
-                    getResourceProvider()
-            );
-            int ghostModeSwipeBackIndex = ayuLayout.addViewToSwipeBack(ghostModePopupWrapper.windowLayout);
-            if (ayuSwipeBack != null) {
-                ayuSwipeBack.setNewForegroundHeight(ghostModeSwipeBackIndex, ghostModePopupWrapper.windowLayout.precalculateHeight(), false);
-            }
-            ActionBarMenuSubItem ghostModeItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.ayu_ghost, getString(R.string.GhostMode), false, getResourceProvider());
-            View.OnClickListener ghostModeClickListener = v -> {
-                if (ayuSwipeBack != null) {
-                    ayuSwipeBack.openForeground(ghostModeSwipeBackIndex);
-                }
-            };
-            ghostModeItem.setOnClickListener(ghostModeClickListener);
-            ghostModeItem.setRightIcon(R.drawable.msg_arrowright, ghostModeClickListener);
-        }
+        ActionBarPopupWindow.ActionBarPopupWindowLayout parentPopupLayout = headerItem.getPopupLayout();
+        PopupSwipeBackLayout parentSwipeBack = parentPopupLayout != null ? parentPopupLayout.getSwipeBack() : null;
+        ayuGramMenuPopupWrapper = new AyuGramMenuPopupWrapper(this, parentSwipeBack, dialog_id, getResourceProvider(), dismissMenu, showGhostMode, showSaveDeleted, showRegexFilters, showViewDeleted, showClearDeleted);
 
-        if (showSaveDeleted) {
-            SaveExclusionPopupWrapper savePopupWrapper = new SaveExclusionPopupWrapper(
-                    this,
-                    ayuSwipeBack,
-                    dialog_id,
-                    getResourceProvider()
-            );
-            int saveDeletedSwipeBackIndex = ayuLayout.addViewToSwipeBack(savePopupWrapper.windowLayout);
-            if (ayuSwipeBack != null) {
-                ayuSwipeBack.setNewForegroundHeight(saveDeletedSwipeBackIndex, savePopupWrapper.windowLayout.precalculateHeight(), false);
-            }
-            ActionBarMenuSubItem saveDeletedItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.msg_delete, getString(R.string.SaveDeletedExclusionMenu), false, getResourceProvider());
-            View.OnClickListener saveDeletedClickListener = v -> {
-                if (ayuSwipeBack != null) {
-                    ayuSwipeBack.openForeground(saveDeletedSwipeBackIndex);
-                }
-            };
-            saveDeletedItem.setOnClickListener(saveDeletedClickListener);
-            saveDeletedItem.setRightIcon(R.drawable.msg_arrowright, saveDeletedClickListener);
-        }
-
-        if (showRegexFilters) {
-            RegexFiltersExclusionPopupWrapper regexFiltersPopupWrapper = new RegexFiltersExclusionPopupWrapper(
-                    this,
-                    ayuSwipeBack,
-                    dialog_id,
-                    getResourceProvider()
-            );
-            int regexFiltersSwipeBackIndex = ayuLayout.addViewToSwipeBack(regexFiltersPopupWrapper.windowLayout);
-            if (ayuSwipeBack != null) {
-                ayuSwipeBack.setNewForegroundHeight(regexFiltersSwipeBackIndex, regexFiltersPopupWrapper.windowLayout.precalculateHeight(), false);
-            }
-            ActionBarMenuSubItem regexFiltersItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.hide_title, getString(R.string.RegexFilters), false, getResourceProvider());
-            regexFiltersItem.setOnClickListener(v -> {
-                dismissMenu.run();
-                AndroidUtilities.runOnUIThread(() -> presentFragment(new RegexChatFiltersListActivity(dialog_id)), 50);
-            });
-            regexFiltersItem.setOnLongClickListener(v -> {
-                dismissMenu.run();
-                AndroidUtilities.runOnUIThread(() -> presentFragment(new RegexFiltersSettingActivity()), 50);
-                return true;
-            });
-            regexFiltersItem.setRightIcon(R.drawable.msg_arrowright, v -> {
-                if (ayuSwipeBack != null) {
-                    ayuSwipeBack.openForeground(regexFiltersSwipeBackIndex);
-                }
-            });
-
-            ActionBarMenuSubItem showFilteredItem = new ActionBarMenuSubItem(getContext(), false, false, false, getResourceProvider());
-            showFilteredMenuItem = showFilteredItem;
-            showFilteredMenuItemRevealed = false;
-            showFilteredItem.setVisibility(View.GONE);
-            showFilteredItem.setTextAndIcon(getString(hideFilteredMessages ? R.string.ShowFilteredMessagesMenuText : R.string.HideFilteredMessagesMenuText), R.drawable.msg_clear_recent);
-            showFilteredItem.setOnClickListener(v -> {
+        showFilteredMenuItem = ayuGramMenuPopupWrapper.showFilteredItem;
+        showFilteredMenuItemRevealed = false;
+        if (showFilteredMenuItem != null) {
+            showFilteredMenuItem.setTextAndIcon(getString(hideFilteredMessages ? R.string.ShowFilteredMessagesMenuText : R.string.HideFilteredMessagesMenuText), R.drawable.msg_clear_recent);
+            showFilteredMenuItem.setOnClickListener(v -> {
                 hideFilteredMessages = !hideFilteredMessages;
-                showFilteredItem.setTextAndIcon(getString(hideFilteredMessages ? R.string.ShowFilteredMessagesMenuText : R.string.HideFilteredMessagesMenuText), R.drawable.msg_clear_recent);
+                showFilteredMenuItem.setTextAndIcon(getString(hideFilteredMessages ? R.string.ShowFilteredMessagesMenuText : R.string.HideFilteredMessagesMenuText), R.drawable.msg_clear_recent);
                 if (messages != null) {
                     for (int i = 0; i < messages.size(); i++) {
                         MessageObject m = messages.get(i);
@@ -9954,55 +9853,9 @@ public class ChatActivity extends BaseFragment implements
                 }
                 dismissMenu.run();
             });
-            showFilteredItem.setMinimumWidth(AndroidUtilities.dp(196));
-            ayuLayout.addView(showFilteredItem);
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) showFilteredItem.getLayoutParams();
-            if (LocaleController.isRTL) {
-                lp.gravity = Gravity.RIGHT;
-            }
-            lp.width = LayoutHelper.MATCH_PARENT;
-            lp.height = AndroidUtilities.dp(48);
-            showFilteredItem.setLayoutParams(lp);
         }
 
-        if (showViewDeleted) {
-            ActionBarMenuSubItem viewDeletedItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.msg_view_file, getString(R.string.ViewDeleted), false, getResourceProvider());
-            viewDeletedItem.setOnClickListener(v -> {
-                dismissMenu.run();
-                AndroidUtilities.runOnUIThread(() -> presentFragment(new AyuViewDeleted(dialog_id)), 50);
-            });
-        }
-
-        if (showClearDeleted) {
-            ActionBarMenuSubItem clearDeletedItem = ActionBarMenuItem.addItem(ayuLayout, R.drawable.msg_clear, getString(R.string.ClearDeleted), false, getResourceProvider());
-            clearDeletedItem.setOnClickListener(v -> {
-                dismissMenu.run();
-                AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity(), getResourceProvider());
-                builder.setTitle(LocaleController.getString(R.string.ClearDeleted));
-                builder.setMessage(LocaleController.getString(R.string.ClearDeletedAlertMessage));
-                builder.setPositiveButton(LocaleController.getString(R.string.Clear), (dialogInterface, i) -> {
-                    AyuMessagesController.getInstance().deleteCurrent(dialog_id, mergeDialogId, () -> {
-                        AndroidUtilities.runOnUIThread(() -> {
-                            getNotificationCenter().removeObserver(ChatActivity.this, NotificationCenter.closeChats);
-                            getNotificationCenter().postNotificationName(NotificationCenter.closeChats);
-                            finishFragment();
-                        });
-                        if (!NekoConfig.disableVibration.Bool() && LaunchActivity.getLastFragment() != null && LaunchActivity.getLastFragment().getFragmentView() != null) {
-                            LaunchActivity.getLastFragment().getFragmentView().performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-                        }
-                    });
-                });
-                builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-                AlertDialog alertDialog = builder.create();
-                showDialog(alertDialog);
-                TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                if (button != null) {
-                    button.setTextColor(Theme.getColor(Theme.key_dialogTextRed));
-                }
-            });
-        }
-
-        headerItem.lazilyAddSwipeBackItem(R.drawable.msg2_reactions2, null, getString(R.string.AyuGramMenu), ayuLayout);
+        headerItem.lazilyAddSwipeBackItem(R.drawable.msg2_reactions2, null, getString(R.string.AyuGramMenu), ayuGramMenuPopupWrapper.swipeBack);
     }
 
     private void checkInsets() {
@@ -16990,7 +16843,9 @@ public class ChatActivity extends BaseFragment implements
         if (readNow) {
             final boolean delete = messageObject.messageOwner.ttl != 0x7FFFFFFF;
             final int ttl = messageObject.messageOwner.ttl == 0x7FFFFFFF ? 0 : messageObject.messageOwner.ttl;
-            messageObject.messageOwner.destroyTime = ttl + getConnectionsManager().getCurrentTime();
+            if (!NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
+                messageObject.messageOwner.destroyTime = ttl + getConnectionsManager().getCurrentTime();
+            }
             if (currentEncryptedChat != null) {
                 getMessagesController().markMessageAsRead(dialog_id, messageObject.messageOwner.random_id, ttl);
             } else {
@@ -17001,8 +16856,10 @@ public class ChatActivity extends BaseFragment implements
             return () -> {
                 final boolean delete = messageObject.messageOwner.ttl != 0x7FFFFFFF;
                 final int ttl = messageObject.messageOwner.ttl == 0x7FFFFFFF ? 0 : messageObject.messageOwner.ttl;
-                messageObject.messageOwner.destroyTime = ttl + getConnectionsManager().getCurrentTime();
-                messageObject.messageOwner.destroyTimeMillis = ttl * 1000L + getConnectionsManager().getCurrentTimeMillis();
+                if (!NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
+                    messageObject.messageOwner.destroyTime = ttl + getConnectionsManager().getCurrentTime();
+                    messageObject.messageOwner.destroyTimeMillis = ttl * 1000L + getConnectionsManager().getCurrentTimeMillis();
+                }
                 if (currentEncryptedChat != null) {
                     getMessagesController().markMessageAsRead(dialog_id, messageObject.messageOwner.random_id, ttl);
                 } else {
@@ -17024,7 +16881,8 @@ public class ChatActivity extends BaseFragment implements
             return null;
         }
         final long taskId = getMessagesController().createDeleteShowOnceTask(dialog_id, messageObject.getId());
-        messageObject.forceExpired = true;
+        // don't render the message as expired when deleted-message saving is on
+        messageObject.forceExpired = !NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool();
         if (messageObject.isOutOwner() || !messageObject.isRoundOnce() && !messageObject.isVoiceOnce()) {
             ArrayList<MessageObject> msgs = new ArrayList<>();
             msgs.add(messageObject);
@@ -26399,6 +26257,9 @@ public class ChatActivity extends BaseFragment implements
                 MessageObject currentMessage = messagesDict[0].get(mid);
                 if (currentMessage != null) {
                     currentMessage.messageOwner.ayuDeleted = true;
+                    if (currentMessage.messageOwner.ayuDeleteDate == 0) {
+                        currentMessage.messageOwner.ayuDeleteDate = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
+                    }
                     chatAdapter.updateRowWithMessageObject(currentMessage, false, false);
                 }
             }
@@ -31896,7 +31757,8 @@ public class ChatActivity extends BaseFragment implements
 
                 return Math.round(windowInsetsStateHolder.getAnimatedMaxBottomInset()
                     + getTopicTabsSideSize(TopicsTabsView.Position.BOTTOM)
-                    + (chatInputViewsContainer.getInputBubbleHeight() + dp(9 + 7)));
+                    + (chatInputViewsContainer.getInputBubbleHeight() + dp(9 + 7))
+                    + (hasMainTabs ? dp(MainTabsHelper.getMainTabsHeight() + MainTabsHelper.getMainTabsMargin()) : 0));
             }
 
             @Override
@@ -35573,9 +35435,12 @@ public class ChatActivity extends BaseFragment implements
                 }
                 sendSecretMessageRead(selectedObject, true, true);
 
-                var prefs = new AyuSavePreferences(selectedObject.messageOwner, currentAccount);
-                prefs.setDialogId(selectedObject.getDialogId());
-                AyuMessagesController.getInstance().onMessageDeleted(prefs);
+                if (!AyuState.isMessageBurned(currentAccount, selectedObject.getDialogId(), selectedObject.getId())) {
+                    var prefs = new AyuSavePreferences(selectedObject.messageOwner, currentAccount);
+                    prefs.setDialogId(selectedObject.getDialogId());
+                    AyuMessagesController.getInstance().onMessageDeleted(prefs);
+                }
+                AyuState.setMessageBurned(currentAccount, selectedObject.getDialogId(), selectedObject.getId());
 
                 Utilities.globalQueue.postRunnable(() -> sendSecretMediaDelete(selectedObject, true), 1000);
                 BotWebViewVibrationEffect.SELECTION_CHANGE.vibrate();
@@ -42228,10 +42093,12 @@ public class ChatActivity extends BaseFragment implements
                     }
                 } catch (Exception ignore) {}
                 secretVoicePlayer = new SecretVoicePlayer(getContext());
+                Runnable openAction = messageObject.isOutOwner() || NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool() ? null : sendSecretMessageRead(messageObject, true);
+                Runnable closeAction = !messageObject.isOutOwner() && !NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool() ? sendSecretMediaDelete(messageObject) : null;
                 secretVoicePlayer.setCell(
                     cell,
-                    !messageObject.isOutOwner() ? sendSecretMessageRead(messageObject, true) : null,
-                    !messageObject.isOutOwner() ? sendSecretMediaDelete(messageObject) : null
+                    openAction,
+                    closeAction
                 );
                 showDialog(secretVoicePlayer);
                 return false;
@@ -44365,9 +44232,23 @@ public class ChatActivity extends BaseFragment implements
                 restartSticker(cell);
                 emojiAnimationsOverlay.onTapItem(cell, ChatActivity.this, true);
                 chatListView.cancelClickRunnables(false);
-            } else if (message.needDrawBluredPreview()) {
+            } else if (message.needDrawBluredPreview(!message.messageOwner.ayuDeleted)) {
                 Runnable openAction = sendSecretMessageRead(message, false);
                 Runnable closeAction = sendSecretMediaDelete(message);
+                if (closeAction == null && NaConfig.INSTANCE.getEnableSaveDeletedMessages().Bool()) {
+                    // keep an archived copy and mark as viewed even though nothing gets deleted
+                    closeAction = () -> {
+                        boolean alreadyBurned = AyuState.isMessageBurned(currentAccount, message.getDialogId(), message.getId());
+                        AyuState.setMessageBurned(currentAccount, message.getDialogId(), message.getId());
+                        if (!alreadyBurned) {
+                            Utilities.globalQueue.postRunnable(() -> {
+                                var prefs = new AyuSavePreferences(message.messageOwner, currentAccount);
+                                prefs.setDialogId(message.getDialogId());
+                                AyuMessagesController.getInstance().onMessageEditedForce(prefs);
+                            });
+                        }
+                    };
+                }
                 cell.invalidate();
                 SecretMediaViewer.getInstance().setParentActivity(getParentActivity());
                 SecretMediaViewer.getInstance().openMedia(message, photoViewerProvider, openAction, closeAction);
