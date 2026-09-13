@@ -114,4 +114,5 @@
     <string name="VideoPlayerDecoderPreferSW">Prefer SW</string>
     <string name="VideoPlayerDecoderHardware">HW Only</string>
     <string name="VideoPlayerDecoderPreferHW">Prefer HW</string>
+    <string name="ForceVideoNewRewindMethod">Force video use new seek method</string>
 </resources>

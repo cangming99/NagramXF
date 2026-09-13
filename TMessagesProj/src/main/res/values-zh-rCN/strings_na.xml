@@ -108,4 +108,5 @@
     <string name="VideoPlayerDecoderPreferSW">软解优先</string>
     <string name="VideoPlayerDecoderHardware">仅硬解</string>
     <string name="VideoPlayerDecoderPreferHW">硬解优先</string>
+    <string name="ForceVideoNewRewindMethod">强制所有视频使用新版快进方式</string>
 </resources>

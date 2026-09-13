@@ -1929,6 +1929,12 @@ object NaConfig {
             ConfigItem.configTypeString,
             ""
         )
+    val forceVideoNewRewindMethod =
+        addConfig(
+            "ForceVideoNewRewindMethod",
+            ConfigItem.configTypeBool,
+            false
+        )
 
     val preferredTranslateTargetLangList = ArrayList<String>()
     fun updatePreferredTranslateTargetLangList() {
