@@ -912,6 +912,9 @@ FileLog.e(finalRequestObject + " got error " + error.code + " " + error.text);
     }
 
     public static void onRequestNewServerIpAndPort(final int second, final int currentAccount) {
+        if (NaConfig.INSTANCE.getDisableSecondAddress().Bool()) {
+            return;
+        }
         Utilities.globalQueue.postRunnable(() -> {
             boolean networkOnline = ApplicationLoader.isNetworkOnline();
             Utilities.stageQueue.postRunnable(() -> {

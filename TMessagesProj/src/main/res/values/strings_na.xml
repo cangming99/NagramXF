@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="N_Config">N-Config</string>
+    <string name="disableSecondAddress">Disable Second Address Request</string>
+    <string name="DisableSecondAddressDesc">Stop requesting a backup server address / port, including DNS TXT updates from NAX or Custom DoH</string>
     <string name="CombineMessage">Combine Messages</string>
     <string name="TextStyle">Text Style</string>
     <string name="NoiseSuppressAndVoiceEnhance">Voice Enhancements</string>

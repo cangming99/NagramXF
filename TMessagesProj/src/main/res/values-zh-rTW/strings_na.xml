@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="N_Config">N-設定</string>
+    <string name="disableSecondAddress">禁用請求備用伺服器位址</string>
+    <string name="DisableSecondAddressDesc">不再請求備用伺服器位址/連接埠，同時停止 NAX 或自訂 DoH 的 DNS TXT 位址更新</string>
     <string name="CombineMessage">合併訊息</string>
     <string name="TextStyle">文字樣式</string>
     <string name="NoiseSuppressAndVoiceEnhance">噪音抑制與語音增強</string>

@@ -59,6 +59,12 @@ object NaConfig {
     private val configs = ArrayList<ConfigItem>()
 
     // Configs
+    val disableSecondAddress =
+        addConfig(
+            "disableSecondAddress",
+            ConfigItem.configTypeBool,
+            false
+        )
     val showTextBold =
         addConfig(
             "TextBold",
